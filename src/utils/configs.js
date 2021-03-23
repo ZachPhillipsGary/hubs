@@ -2,7 +2,10 @@ import appLogo from "../assets/images/app-logo.png";
 import companyLogo from "../assets/images/company-logo.png";
 import homeHeroBackground from "../assets/images/home-hero-background-unbranded.png";
 import sceneEditorLogo from "../assets/images/editor-logo.png";
-import { getLocale, getMessage } from "./i18n";
+import {
+  getLocale,
+  getMessage
+} from "./i18n";
 
 // Read configs from global variable if available, otherwise use the process.env injected from build.
 const configs = {};
@@ -37,7 +40,9 @@ if (process.env.APP_CONFIG) {
 
 if (window.APP_CONFIG) {
   configs.APP_CONFIG = window.APP_CONFIG;
-  const { theme } = configs.APP_CONFIG;
+  const {
+    theme
+  } = configs.APP_CONFIG;
   if (theme) {
     const colorVars = [];
     for (const key in theme) {
@@ -57,6 +62,8 @@ if (window.APP_CONFIG) {
     features: {}
   };
 }
+
+configs.FEDERATED_LOGIN_URL = process.env.FEDERATED_LOGIN_URL || "https://localhost:3001/sso/bundle.js"
 
 const isLocalDevelopment = process.env.NODE_ENV === "development";
 

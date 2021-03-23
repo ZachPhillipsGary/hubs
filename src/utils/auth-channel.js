@@ -23,13 +23,20 @@ export default class AuthChannel {
     if (hubChannel) {
       await hubChannel.signOut();
     }
-    this.store.update({ credentials: { token: null, email: null } });
+    this.store.update({
+      credentials: {
+        token: null,
+        email: null
+      }
+    });
     await this.store.resetToRandomDefaultAvatar();
     this._signedIn = false;
   };
 
   verifyAuthentication(authTopic, authToken, authPayload) {
     const channel = this.socket.channel(authTopic);
+    console.log("creating socket")
+    window[authTopic] = channel
     return new Promise((resolve, reject) => {
       channel.onError(() => {
         channel.leave();
@@ -39,12 +46,18 @@ export default class AuthChannel {
       channel
         .join()
         .receive("ok", () => {
-          channel.on("auth_credentials", async ({ credentials: token, payload: payload }) => {
+          channel.on("auth_credentials", async ({
+            credentials: token,
+            payload: payload
+          }) => {
             await this.handleAuthCredentials(payload.email, token);
             resolve();
           });
 
-          channel.push("auth_verified", { token: authToken, payload: authPayload });
+          channel.push("auth_verified", {
+            token: authToken,
+            payload: authPayload
+          });
         })
         .receive("error", reject);
     });
@@ -54,27 +67,39 @@ export default class AuthChannel {
     const channel = this.socket.channel(`auth:${uuid()}`);
     await new Promise((resolve, reject) =>
       channel
-        .join()
-        .receive("ok", resolve)
-        .receive("error", reject)
+      .join()
+      .receive("ok", resolve)
+      .receive("error", reject)
     );
 
     const authComplete = new Promise(resolve =>
-      channel.on("auth_credentials", async ({ credentials: token }) => {
+      channel.on("auth_credentials", async ({
+        credentials: token
+      }) => {
         await this.handleAuthCredentials(email, token, hubChannel);
         resolve();
       })
     );
 
-    channel.push("auth_request", { email, origin: "hubs" });
+    channel.push("auth_request", {
+      email,
+      origin: "hubs"
+    });
 
     // Returning an object with the authComplete promise since we want the caller to wait for the above await but not
     // for authComplete.
-    return { authComplete };
+    return {
+      authComplete
+    };
   }
 
   async handleAuthCredentials(email, token, hubChannel) {
-    this.store.update({ credentials: { email, token } });
+    this.store.update({
+      credentials: {
+        email,
+        token
+      }
+    });
 
     if (hubChannel) {
       await hubChannel.signIn(token);

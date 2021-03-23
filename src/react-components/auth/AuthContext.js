@@ -11,7 +11,10 @@ export const AuthContext = createContext();
 
 async function checkIsAdmin(socket, store) {
   // TODO: Doing all of this just to determine if the user is an admin seems unnecessary. The auth callback should have the isAdmin flag.
-  const retPhxChannel = socket.channel("ret", { hub_id: "index", token: store.state.credentials.token });
+  const retPhxChannel = socket.channel("ret", {
+    hub_id: "index",
+    token: store.state.credentials.token
+  });
 
   const perms = await new Promise(resolve => {
     retPhxChannel
@@ -72,7 +75,12 @@ export function AuthContextProvider({ children, store }) {
   const signOut = useCallback(
     async () => {
       configs.setIsAdmin(false);
-      store.update({ credentials: { token: null, email: null } });
+      store.update({
+        credentials: {
+          token: null,
+          email: null
+        }
+      });
       await store.resetToRandomDefaultAvatar();
     },
     [store]
@@ -113,14 +121,34 @@ export function AuthContextProvider({ children, store }) {
 
         return false;
       };
+      const federated_login = configs.FEDERATED_LOGIN_URL
+        ? configs.FEDERATED_LOGIN_URL
+        : configs.default.FEDERATED_LOGIN_URL;
+
+      if (federated_login) {
+        console.log("Loading federated login script");
+        try {
+          const scriptElm = document.createElement("script");
+          scriptElm.src = `${window.location.protocol}//${configs.FEDERATED_LOGIN_URL}`;
+          document.body.appendChild(scriptElm);
+        } catch (e) {
+          console.error("Unable to load SSO scripts", e);
+        }
+      }
 
       runAsync()
         .then(isAdmin => {
-          setContext(state => ({ ...state, isAdmin }));
+          setContext(state => ({
+            ...state,
+            isAdmin
+          }));
         })
         .catch(error => {
           console.error(error);
-          setContext(state => ({ ...state, isAdmin: false }));
+          setContext(state => ({
+            ...state,
+            isAdmin: false
+          }));
         });
 
       return () => {
@@ -130,7 +158,7 @@ export function AuthContextProvider({ children, store }) {
     [store, setContext]
   );
 
-  return <AuthContext.Provider value={context}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={context}> {children} </AuthContext.Provider>;
 }
 
 AuthContextProvider.propTypes = {
