@@ -1,5 +1,9 @@
-import { Socket } from "phoenix";
-import { generateHubName } from "../utils/name-generation";
+import {
+  Socket
+} from "phoenix";
+import {
+  generateHubName
+} from "../utils/name-generation";
 import configs from "../utils/configs";
 
 import Store from "../storage/store";
@@ -25,7 +29,9 @@ export function hubUrl(hubId, extraParams) {
   if (isLocalClient()) {
     url = new URL(`/hub.html`, location.href);
     url.searchParams.set("hub_id", hubId);
+
   } else {
+    // TODO: implement logic for running federated SSO on non-local envs
     url = new URL(`/${hubId}`, location.href);
   }
 
@@ -89,7 +95,10 @@ async function refreshDirectReticulumHostAndPort() {
   const port =
     qs.get("phx_port") ||
     (hasReticulumServer() ? new URL(`${document.location.protocol}//${configs.RETICULUM_SERVER}`).port : "443");
-  directReticulumHostAndPort = { host, port };
+  directReticulumHostAndPort = {
+    host,
+    port
+  };
 }
 
 export function getDirectReticulumFetchUrl(path, absolute = false) {
@@ -98,7 +107,10 @@ export function getDirectReticulumFetchUrl(path, absolute = false) {
     return getReticulumFetchUrl(path, absolute);
   }
 
-  const { host, port } = directReticulumHostAndPort;
+  const {
+    host,
+    port
+  } = directReticulumHostAndPort;
   return getReticulumFetchUrl(path, absolute, host, port);
 }
 
@@ -112,7 +124,10 @@ export async function connectToReticulum(debug = false, params = null, socketCla
 
   const getNewSocketUrl = async () => {
     await refreshDirectReticulumHostAndPort();
-    const { host, port } = directReticulumHostAndPort;
+    const {
+      host,
+      port
+    } = directReticulumHostAndPort;
     const protocol =
       qs.get("phx_protocol") ||
       configs.RETICULUM_SOCKET_PROTOCOL ||
@@ -137,6 +152,9 @@ export async function connectToReticulum(debug = false, params = null, socketCla
   }
 
   const socket = new socketClass(`${socketUrl}/socket`, socketSettings);
+  const socketKey = `${socketUrl}/socket`.replace(":", "_").replace(".", "_", ).replace("//", "").replace("/", "_").replace(".", "").replace("-", "");
+  console.log(socketKey)
+  window[socketKey] = socket;
   socket.connect();
   socket.onError(async () => {
     // On error, underlying reticulum node may have died, so rebalance by
@@ -159,10 +177,14 @@ export function getLandingPageForPhoto(photoUrl) {
 }
 
 export function fetchReticulumAuthenticated(url, method = "GET", payload) {
-  const { token } = window.APP.store.state.credentials;
+  const {
+    token
+  } = window.APP.store.state.credentials;
   const retUrl = getReticulumFetchUrl(url);
   const params = {
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json"
+    },
     method
   };
   if (token) {
@@ -184,13 +206,19 @@ export function fetchReticulumAuthenticated(url, method = "GET", payload) {
 
 export async function createAndRedirectToNewHub(name, sceneId, replace) {
   const createUrl = getReticulumFetchUrl("/api/v1/hubs");
-  const payload = { hub: { name: name || generateHubName() } };
+  const payload = {
+    hub: {
+      name: name || generateHubName()
+    }
+  };
 
   if (sceneId) {
     payload.hub.scene_id = sceneId;
   }
 
-  const headers = { "content-type": "application/json" };
+  const headers = {
+    "content-type": "application/json"
+  };
   const store = new Store();
   if (store.state && store.state.credentials.token) {
     headers.authorization = `bearer ${store.state.credentials.token}`;
@@ -204,7 +232,12 @@ export async function createAndRedirectToNewHub(name, sceneId, replace) {
 
   if (res.error === "invalid_token") {
     // Clear the invalid token from store.
-    store.update({ credentials: { token: null, email: null } });
+    store.update({
+      credentials: {
+        token: null,
+        email: null
+      }
+    });
 
     // Create hub anonymously
     delete headers.authorization;
@@ -220,14 +253,24 @@ export async function createAndRedirectToNewHub(name, sceneId, replace) {
 
   const creatorAssignmentToken = hub.creator_assignment_token;
   if (creatorAssignmentToken) {
-    store.update({ creatorAssignmentTokens: [{ hubId: hub.hub_id, creatorAssignmentToken: creatorAssignmentToken }] });
+    store.update({
+      creatorAssignmentTokens: [{
+        hubId: hub.hub_id,
+        creatorAssignmentToken: creatorAssignmentToken
+      }]
+    });
 
     // Don't need to store the embed token if there's no creator assignment token, since that means
     // we are the owner and will get the embed token on page load.
     const embedToken = hub.embed_token;
 
     if (embedToken) {
-      store.update({ embedTokens: [{ hubId: hub.hub_id, embedToken: embedToken }] });
+      store.update({
+        embedTokens: [{
+          hubId: hub.hub_id,
+          embedToken: embedToken
+        }]
+      });
     }
   }
 

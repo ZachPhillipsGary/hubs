@@ -17,11 +17,20 @@ const initialSignInState = {
 function loginReducer(state, action) {
   switch (action.type) {
     case SignInAction.submitEmail:
-      return { step: SignInStep.waitForVerification, email: action.email };
+      return {
+        step: SignInStep.waitForVerification,
+        email: action.email
+      };
     case SignInAction.verificationReceived:
-      return { ...state, step: SignInStep.complete };
+      return {
+        ...state,
+        step: SignInStep.complete
+      };
     case SignInAction.cancel:
-      return { ...state, step: SignInStep.submit };
+      return {
+        ...state,
+        step: SignInStep.submit
+      };
   }
 }
 
@@ -32,15 +41,24 @@ function useSignIn() {
   const submitEmail = useCallback(
     email => {
       auth.signIn(email).then(() => {
-        dispatch({ type: SignInAction.verificationReceived });
+        dispatch({
+          type: SignInAction.verificationReceived
+        });
       });
-      dispatch({ type: SignInAction.submitEmail, email });
+      dispatch({
+        type: SignInAction.submitEmail,
+        email
+      });
     },
     [auth]
   );
+  // Add submit Email method to window
+  window.submitEmail = submitEmail;
 
   const cancel = useCallback(() => {
-    dispatch({ type: SignInAction.cancel });
+    dispatch({
+      type: SignInAction.cancel
+    });
   }, []);
 
   return {
@@ -67,6 +85,7 @@ export function SignInModalContainer() {
 
   return (
     <SignInModal disableFullscreen>
+      {" "}
       {step === SignInStep.submit ? (
         <SubmitEmail
           onSubmitEmail={submitEmail}
@@ -83,7 +102,7 @@ export function SignInModalContainer() {
           email={email}
           showNewsletterSignup={configs.feature("show_newsletter_signup")}
         />
-      )}
+      )}{" "}
     </SignInModal>
   );
 }
